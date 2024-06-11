@@ -11,8 +11,8 @@
 🌱 I’m currently learning **Devops**.\
 💬 Ask me about **PHP, Laravel, React and NodeJS**.\
 📫 Reach me by email **jotonsutradharjoy@gmail.com**.\
-👨‍💻 You can check my profile **[Joton's Profile](#)**.\
-🎥 Have some fun with me there! **[Filmseeker](http://filmseeker.unaux.com/)**, **[SearchMe](http://search-me.unaux.com/)**, **[Accountancy](https://accountancy.duranta97.org/)**\
+👨‍💻 You can check my profile **[Joton's Profile](https://jotonsutradhar.com/)**.\
+🎥 Have some fun with me there! **[Filmseeker](https://filmseeker.jotonsutradhar.com/)**, **[SearchMe](https://search.jotonsutradhar.com/)**, **[Accountancy](https://accountancy.jotonsutradhar.com/)**\
 💻 In my free time, love to learn new technology. \
 🤦‍♂️ Fun fact **Love to play flute, dance, and sing**.
 ### <h4>🛠 Tech & Tools</h4>  
