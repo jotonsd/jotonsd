@@ -22,31 +22,35 @@ export function Projects() {
           />
 
           <div className="grid gap-6">
-            {projects.map((p, i) => {
-              const Wrapper = p.link ? motion.a : motion.article;
-              const linkProps = p.link ? { href: p.link, target: "_blank", rel: "noopener noreferrer" } : {};
-              return (
-                <Wrapper
+            {projects.map((p, i) => (
+                <motion.article
                   key={p.code}
-                  {...linkProps}
                   {...fromDepth()}
                   className="glass group block rounded-2xl p-7 transition-colors duration-500 hover:border-gold/40"
                 >
-                  <div className="label flex items-center justify-between text-paper/45">
+                  <div className="label flex items-center justify-between gap-4 text-paper/45">
                     <span>
                       <span className="text-gold">{String(i + 1).padStart(2, "0")}</span>
                       <span className="mx-3 text-paper/25">/</span>
                       {p.kind}
                     </span>
-                    {p.link ? (
-                      <span className="flex items-center gap-1.5 text-paper/60 transition group-hover:text-gold">
-                        Code <ArrowUpRight className="size-3.5 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <Lock className="size-3" /> Private
-                      </span>
-                    )}
+                    <span className="flex items-center gap-5">
+                      {p.live && (
+                        <a href={p.live} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-gold transition hover:text-paper">
+                          <span className="size-1.5 rounded-full bg-gold shadow-[0_0_8px_1px] shadow-gold/60" />
+                          Live <ArrowUpRight className="size-3.5" />
+                        </a>
+                      )}
+                      {p.link ? (
+                        <a href={p.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-paper/60 transition hover:text-gold">
+                          Code <ArrowUpRight className="size-3.5" />
+                        </a>
+                      ) : (
+                        <span className="flex items-center gap-1.5">
+                          <Lock className="size-3" /> Private code
+                        </span>
+                      )}
+                    </span>
                   </div>
 
                   <h3 className="mt-5 font-display text-[1.45rem] uppercase leading-tight">
@@ -66,9 +70,8 @@ export function Projects() {
                   <div className="mt-6 border-t border-paper/10 pt-4 font-mono text-[11px] tracking-wide text-paper/45">
                     {p.stack.join("  ·  ")}
                   </div>
-                </Wrapper>
-              );
-            })}
+                </motion.article>
+            ))}
           </div>
 
           <p className="label mt-10 text-paper/50">

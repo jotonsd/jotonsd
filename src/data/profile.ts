@@ -63,7 +63,8 @@ export type Project = {
   description: string;
   highlights: string[];
   stack: string[];
-  link?: string;
+  link?: string; // source code
+  live?: string; // live site
 };
 
 export const projects: Project[] = [
@@ -90,6 +91,7 @@ export const projects: Project[] = [
       "Storefront for puja essentials with a complete back office: web, mobile and delivery apps, plus an admin with real double-entry accounting.",
     highlights: ["Bangla / English (next-intl)", "Ledger, trial balance, stock reports", "Courier integration & blog"],
     stack: ["Next.js 14", "TypeScript", "Tailwind", "RTK Query", "Django"],
+    live: "https://pujarighar.com",
   },
   {
     code: "SRP",
@@ -102,6 +104,7 @@ export const projects: Project[] = [
       "SEO tools suite with subscription plans, orders and plan history, backed by a carefully documented relational schema.",
     highlights: ["Plans, orders & billing history", "Analytics dashboards", "OAuth login flow"],
     stack: ["Laravel", "Next.js", "Redux Persist", "Recharts"],
+    live: "https://serpely.com",
   },
   {
     code: "TKK",
@@ -115,6 +118,7 @@ export const projects: Project[] = [
     highlights: ["Offline-first", "Streaks & calendar", "Activity heatmap"],
     stack: ["Flutter", "Dart"],
     link: "https://github.com/jotonsd/tikki",
+    live: "https://jotonsd.github.io/tikki-privacy/home.html",
   },
   {
     code: "KTU",
@@ -141,6 +145,7 @@ export const projects: Project[] = [
     highlights: ["Income & expense tracking", "Loans & bills", "Web + mobile"],
     stack: ["Django", "Next.js", "TypeScript", "Flutter"],
     link: "https://github.com/jotonsd/hisab-frontend",
+    live: "https://hisab.flyghuri.com",
   },
 ];
 
