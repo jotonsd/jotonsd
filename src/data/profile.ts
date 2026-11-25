@@ -21,14 +21,14 @@ export const stats = [
 
 // Route map — positions are in a 1000 × 520 SVG viewBox, hub at (500, 260)
 export const routes = [
-  { code: "1P", name: "Travelport", note: "GDS + NDC", x: 150, y: 90 },
-  { code: "1S", name: "Sabre", note: "GDS", x: 90, y: 275 },
-  { code: "NDC", name: "Sabre NDC", note: "Offer / Order", x: 200, y: 445 },
+  { code: "1G", name: "Travelport", note: "GDS + NDC", x: 150, y: 90 },
+  { code: "1B", name: "Sabre", note: "GDS + NDC", x: 90, y: 275 },
   { code: "EK", name: "Emirates", note: "Direct", x: 420, y: 480 },
   { code: "WY", name: "Oman Air", note: "Direct", x: 640, y: 470 },
   { code: "G9", name: "Air Arabia", note: "Direct", x: 840, y: 420 },
   { code: "ET", name: "Ethiopian", note: "Direct", x: 915, y: 245 },
   { code: "2A", name: "Air Astra", note: "Direct", x: 820, y: 80 },
+  { code: "6E", name: "IndiGo", note: "Direct", x: 700, y: 60 },
   { code: "PG", name: "Payments", note: "Gateway", x: 500, y: 40 },
 ];
 
