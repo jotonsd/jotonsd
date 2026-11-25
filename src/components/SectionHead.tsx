@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
+import { ArrowUpRight } from "lucide-react";
+import { openVisit } from "./universe/visit";
 
 type Props = {
   index: string;
@@ -29,6 +31,13 @@ export function SectionHead({ index, planet, kicker, title, accent, intro }: Pro
           Arriving · <span className="text-paper">{planet}</span>
         </span>
         <span className="hidden text-paper/40 sm:inline">— {kicker}</span>
+        <button
+          type="button"
+          onClick={() => openVisit(planet)}
+          className="label ml-1 inline-flex items-center gap-1.5 rounded-full border border-gold/40 px-3 py-1 text-gold transition hover:border-gold hover:bg-gold/10"
+        >
+          Visit <ArrowUpRight className="size-3" />
+        </button>
       </motion.div>
 
       <motion.h2

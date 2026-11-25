@@ -9,7 +9,7 @@ export function ScrollPlane() {
   const left = useTransform(progress, (v) => `calc(${v * 100}% - ${v * 22}px)`);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-5">
+    <div data-scrollbar className="pointer-events-none fixed inset-x-0 top-0 z-50 h-5">
       <div className="absolute inset-x-0 top-[9px] border-t border-dashed border-white/10" />
       <motion.div
         className="absolute left-0 top-[9px] h-px origin-left bg-gold/70"

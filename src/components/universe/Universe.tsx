@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { PLANET_INFO } from "./visit";
 import {
   ATMO_FRAG, ATMO_VERT, PLANET_FRAG, PLANET_VERT, POST_FRAG, POST_VERT,
   RING_FRAG, RING_VERT, SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT,
@@ -126,6 +129,25 @@ export function Universe() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = useState(false);
   const [hud, setHud] = useState<Hud>({ index: 0, dist: "—", vel: "—" });
+  const [visit, setVisit] = useState<number | null>(null);
+  const [hover, setHover] = useState<number | null>(null);
+  const hoverLabel = useRef<HTMLDivElement>(null);
+  const actions = useRef({ open: (_i: number) => {}, close: () => {}, step: (_d: number) => {} });
+
+  // while visiting: hide the page content and lock scrolling
+  useEffect(() => {
+    const html = document.documentElement;
+    if (visit === null) {
+      delete html.dataset.visiting;
+      return;
+    }
+    html.dataset.visiting = "1";
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = prev;
+    };
+  }, [visit]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -175,6 +197,8 @@ export function Universe() {
 
     // planets
     const spinners: { mesh: THREE.Mesh; speed: number }[] = [];
+    const pickables: THREE.Mesh[] = [];
+    const pickIndex = new Map<THREE.Object3D, number>();
     const timeUniforms: { value: number }[] = [];
     for (const s of STOPS) {
       if (!s.kind) continue;
@@ -197,6 +221,8 @@ export function Universe() {
       planet.rotation.z = 0.2;
       group.add(planet);
       spinners.push({ mesh: planet, speed: s.spin });
+      pickables.push(planet);
+      pickIndex.set(planet, STOPS.indexOf(s));
 
       if (s.atmo) {
         const k = s.atmoScale ?? 1.04;
@@ -300,6 +326,177 @@ export function Universe() {
     const look = new THREE.Vector3();
     const tmp = new THREE.Vector3();
 
+    /* ---------------- planet visits: fly to a stop and orbit it ---------------- */
+    const routePos = new THREE.Vector3();
+    const routeLook = new THREE.Vector3();
+    const fromPos = new THREE.Vector3();
+    const fromLook = new THREE.Vector3();
+    const destPos = new THREE.Vector3();
+    const destLook = new THREE.Vector3();
+    const vF = new THREE.Vector3(), vR = new THREE.Vector3(), vU = new THREE.Vector3();
+    const WORLD_UP = new THREE.Vector3(0, 1, 0);
+    let mode: "route" | "visit" = "route";
+    let visitIdx = 0;
+    let flyT = 1;
+    let flyDur = 2;
+    const sunYaw = Math.atan2(sun.x, sun.z);
+    const orbit = { yaw: 0, pitch: 0, dist: 1, tYaw: 0, tPitch: 0, tDist: 1, min: 1, max: 1 };
+
+    const orbitFor = (i: number) => {
+      const s = STOPS[i];
+      if (!s.kind) return { dist: 15 * BH_SCALE, min: 6.5 * BH_SCALE, max: 45 * BH_SCALE, pitch: 0.12 };
+      if (s.kind === "SATURN") return { dist: s.r * 4.4, min: s.r * 2.6, max: s.r * 9, pitch: 0.32 };
+      return { dist: s.r * 2.9, min: s.r * 1.5, max: s.r * 8, pitch: 0.16 };
+    };
+    const visitPose = () => {
+      const c = STOPS[visitIdx].pos;
+      const cp = Math.cos(orbit.pitch);
+      destPos.set(cp * Math.sin(orbit.yaw), Math.sin(orbit.pitch), cp * Math.cos(orbit.yaw)).multiplyScalar(orbit.dist).add(c);
+      // frame the planet beside the info panel: right of centre on desktop, above it on phones
+      vF.subVectors(c, destPos).normalize();
+      vR.crossVectors(vF, WORLD_UP).normalize();
+      vU.crossVectors(vR, vF);
+      const k = orbit.dist * 0.2;
+      destLook.copy(c);
+      if (window.innerWidth >= 1024) destLook.addScaledVector(vR, -k);
+      else destLook.addScaledVector(vU, -k * 0.9);
+    };
+    const startFly = () => {
+      fromPos.copy(camera.position);
+      fromLook.copy(look);
+      flyT = reduce ? 1 : 0;
+      if (mode === "visit") visitPose();
+      const d = fromPos.distanceTo(mode === "visit" ? destPos : routePos);
+      flyDur = THREE.MathUtils.clamp(1.3 + d / 900, 1.5, 4.2);
+    };
+    const open = (i: number) => {
+      if (!window.__introDone) return;
+      const o = orbitFor(i);
+      visitIdx = i;
+      orbit.yaw = orbit.tYaw = sunYaw - 0.55 + (i % 2 ? 0.35 : -0.2);
+      orbit.pitch = orbit.tPitch = o.pitch;
+      orbit.dist = orbit.tDist = o.dist;
+      orbit.min = o.min;
+      orbit.max = o.max;
+      mode = "visit";
+      startFly();
+      setHover(null);
+      setVisit(i);
+    };
+    const close = () => {
+      if (mode !== "visit") return;
+      mode = "route";
+      startFly();
+      setVisit(null);
+    };
+    const step = (d: number) => {
+      if (mode === "visit") open((visitIdx + d + STOPS.length) % STOPS.length);
+    };
+    actions.current = { open, close, step };
+
+    const onVisitEvent = (e: Event) => {
+      const i = STOPS.findIndex((s) => s.name === (e as CustomEvent<string>).detail);
+      if (i >= 0) open(i);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (mode !== "visit") return;
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    };
+
+    // orbit controls — listen on the window: the canvas sits behind <body> and never gets pointer events
+    let dragging = false, lastX = 0, lastY = 0, idle = 0;
+    const touches = new Map<number, { x: number; y: number }>();
+    let pinchStart = 0, pinchDist = 0;
+    const onDown = (e: PointerEvent) => {
+      if (mode !== "visit" || isUI(e.target)) return;
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2) {
+        const [a, b] = [...touches.values()];
+        pinchStart = Math.hypot(a.x - b.x, a.y - b.y);
+        pinchDist = orbit.tDist;
+        dragging = false;
+        return;
+      }
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      document.documentElement.dataset.dragging = "1";
+    };
+    const onDrag = (e: PointerEvent) => {
+      if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2 && pinchStart > 0) {
+        const [a, b] = [...touches.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        orbit.tDist = THREE.MathUtils.clamp((pinchDist * pinchStart) / Math.max(d, 1), orbit.min, orbit.max);
+        idle = 0;
+        return;
+      }
+      if (!dragging) return;
+      orbit.tYaw -= (e.clientX - lastX) * 0.006;
+      orbit.tPitch = THREE.MathUtils.clamp(orbit.tPitch + (e.clientY - lastY) * 0.005, -1.25, 1.25);
+      lastX = e.clientX;
+      lastY = e.clientY;
+      idle = 0;
+    };
+    const onUp = (e: PointerEvent) => {
+      touches.delete(e.pointerId);
+      if (touches.size < 2) pinchStart = 0;
+      dragging = false;
+      delete document.documentElement.dataset.dragging;
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (mode !== "visit" || isUI(e.target)) return;
+      e.preventDefault();
+      orbit.tDist = THREE.MathUtils.clamp(orbit.tDist * Math.exp(e.deltaY * 0.0012), orbit.min, orbit.max);
+      idle = 0;
+    };
+
+    // click a planet in the background to visit it
+    const ray = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    let pointerMoved = false, pointerX = 0, pointerY = 0, overUI = true, hovered: number | null = null;
+    const isUI = (t: EventTarget | null) => !!(t as Element | null)?.closest?.("a, button, input, textarea, .glass, header, nav");
+    const pickAt = (): number | null => {
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObjects(pickables, false)[0];
+      if (hit) return pickIndex.get(hit.object) ?? null;
+      // the black hole has no mesh: test against its on-screen disk
+      if (postMat.uniforms.uBHOn.value > 0.5) {
+        tmp.copy(bh.pos).project(camera);
+        if (tmp.z < 1) {
+          const d = camera.position.distanceTo(bh.pos);
+          const rad = Math.atan((9 * BH_SCALE) / d) / THREE.MathUtils.degToRad(camera.fov / 2);
+          if (Math.hypot((ndc.x - tmp.x) * camera.aspect, ndc.y - tmp.y) < Math.max(rad, 0.08)) return STOPS.length - 1;
+        }
+      }
+      return null;
+    };
+    const onMove = (e: PointerEvent) => {
+      pointerX = e.clientX;
+      pointerY = e.clientY;
+      ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+      overUI = isUI(e.target);
+      pointerMoved = true;
+    };
+    const onClick = (e: MouseEvent) => {
+      if (mode !== "route" || !window.__introDone || isUI(e.target)) return;
+      ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+      const i = pickAt();
+      if (i !== null) open(i);
+    };
+
+    window.addEventListener("visit:open", onVisitEvent);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("click", onClick);
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onDrag);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("wheel", onWheel, { passive: false });
+
     const frame = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
@@ -322,12 +519,54 @@ export function Universe() {
         look.lerp(startLook, lift);
       }
 
-      const vz = (lastZ - z) / Math.max(dt, 1e-4);
+      // visiting a planet (or flying to / from one)
+      routePos.copy(camera.position);
+      routeLook.copy(look);
+      if (mode === "visit" || flyT < 1) {
+        const k = 1 - Math.exp(-dt * 5);
+        if (!dragging) {
+          idle += dt;
+          if (idle > 1.5 && !reduce) orbit.tYaw += dt * 0.04;
+        }
+        orbit.yaw += (orbit.tYaw - orbit.yaw) * k;
+        orbit.pitch += (orbit.tPitch - orbit.pitch) * k;
+        orbit.dist += (orbit.tDist - orbit.dist) * k;
+        if (mode === "visit") visitPose();
+        else {
+          destPos.copy(routePos);
+          destLook.copy(routeLook);
+        }
+        if (flyT < 1) {
+          flyT = Math.min(1, flyT + dt / flyDur);
+          const f = flyT < 0.5 ? 4 * flyT ** 3 : 1 - (-2 * flyT + 2) ** 3 / 2;
+          camera.position.lerpVectors(fromPos, destPos, f);
+          camera.position.y += Math.sin(Math.PI * f) * Math.min(fromPos.distanceTo(destPos) * 0.06, 30);
+          look.lerpVectors(fromLook, destLook, f);
+        } else {
+          camera.position.copy(destPos);
+          look.copy(destLook);
+        }
+      }
+
+      const vz = mode === "route" && flyT >= 1 ? (lastZ - z) / Math.max(dt, 1e-4) : 0;
       lastZ = z;
       camera.up.set(THREE.MathUtils.clamp(vz * 0.0004, -0.06, 0.06), 1, 0).normalize();
       camera.lookAt(look);
       camera.updateMatrixWorld();
       far.position.copy(camera.position);
+
+      // hover label for clickable planets
+      if (pointerMoved) {
+        pointerMoved = false;
+        const h = mode === "route" && flyT >= 1 && !overUI && window.__introDone ? pickAt() : null;
+        if (h !== hovered) {
+          hovered = h;
+          setHover(h);
+        }
+      }
+      if (hovered !== null && hoverLabel.current) {
+        hoverLabel.current.style.transform = `translate(${pointerX + 18}px, ${pointerY + 14}px)`;
+      }
 
       for (const s of spinners) s.mesh.rotation.y += s.speed * dt * (reduce ? 0 : 1);
       for (const u of timeUniforms) u.value = time;
@@ -366,6 +605,15 @@ export function Universe() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("intro:done", onIntro);
+      window.removeEventListener("visit:open", onVisitEvent);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("click", onClick);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onDrag);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("wheel", onWheel);
       ro.disconnect();
       scene.traverse((o) => {
         const m = o as THREE.Mesh;
@@ -380,10 +628,107 @@ export function Universe() {
 
   return (
     <>
-      <canvas ref={canvasRef} aria-hidden className="pointer-events-none fixed inset-0 -z-10 size-full bg-black" />
+      <canvas
+        ref={canvasRef}
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 size-full bg-black"
+      />
+
+      {/* "visit" label that follows the pointer over a planet */}
+      <div
+        ref={hoverLabel}
+        aria-hidden
+        className={`label pointer-events-none fixed left-0 top-0 z-50 flex items-center gap-2 whitespace-nowrap rounded-full border border-gold/40 bg-black/60 px-3 py-1.5 text-gold backdrop-blur-md transition-opacity duration-200 ${hover !== null ? "opacity-100" : "opacity-0"}`}
+      >
+        Visit {hover !== null ? STOPS[hover].name : ""} <ArrowRight className="size-3" />
+      </div>
+
+      {/* planet visit panel */}
+      <AnimatePresence>
+        {visit !== null && (
+          <motion.div
+            key="visit-ui"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="fixed inset-0 z-40 pointer-events-none"
+          >
+            <div className="pointer-events-auto absolute right-5 top-5 md:right-10 md:top-8">
+              <button
+                onClick={() => actions.current.close()}
+                className="label flex items-center gap-2 rounded-full border border-paper/20 bg-black/50 px-4 py-2.5 text-paper/80 backdrop-blur-md transition hover:border-gold hover:text-gold"
+              >
+                Return to journey <X className="size-3.5" />
+              </button>
+            </div>
+
+            <div className="label absolute left-1/2 top-8 hidden -translate-x-1/2 text-paper/40 md:block">
+              Drag to orbit · Scroll to zoom · Esc to return
+            </div>
+
+            <div className="pointer-events-auto absolute inset-x-3 bottom-3 md:inset-x-auto md:bottom-10 md:left-10 md:w-[420px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={visit}
+                  initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -12, filter: "blur(8px)" }}
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                  className="glass rounded-2xl bg-black/40 p-6 md:p-7"
+                >
+                  <div className="label flex items-center justify-between text-paper/50">
+                    <span>
+                      <span className="text-gold">{STOPS[visit].kind ? "Orbiting" : "Event horizon"}</span> · {String(visit + 1).padStart(2, "0")} / {String(STOPS.length).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <h2 className="mt-4 font-display text-[1.9rem] uppercase leading-tight">{STOPS[visit].name}</h2>
+                  <p className="mt-3 text-[15px] leading-relaxed text-paper/70">{PLANET_INFO[STOPS[visit].name]?.tagline}</p>
+                  <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-paper/10 pt-5">
+                    {PLANET_INFO[STOPS[visit].name]?.facts.map(([k, v]) => (
+                      <div key={k}>
+                        <dt className="label text-[10px] text-paper/45">{k}</dt>
+                        <dd className="mt-1 text-lg text-paper">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className="mt-6 flex items-center justify-between gap-3 border-t border-paper/10 pt-5">
+                    <div className="flex gap-2">
+                      <button
+                        aria-label="Previous planet"
+                        onClick={() => actions.current.step(-1)}
+                        className="grid size-10 place-items-center rounded-full border border-paper/20 text-paper/80 transition hover:border-gold hover:text-gold"
+                      >
+                        <ArrowLeft className="size-4" />
+                      </button>
+                      <button
+                        aria-label="Next planet"
+                        onClick={() => actions.current.step(1)}
+                        className="grid size-10 place-items-center rounded-full border border-paper/20 text-paper/80 transition hover:border-gold hover:text-gold"
+                      >
+                        <ArrowRight className="size-4" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const id = STOPS[visit].section;
+                        actions.current.close();
+                        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 60);
+                      }}
+                      className="label flex items-center gap-2 text-gold transition hover:text-paper"
+                    >
+                      {PLANET_INFO[STOPS[visit].name]?.section} <ArrowRight className="size-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {failed && <div aria-hidden className="fixed inset-0 -z-10 bg-[#04050d]" />}
       {/* trajectory rail */}
-      <nav aria-label="Journey" className="fixed left-6 top-1/2 z-30 hidden -translate-y-1/2 xl:block">
+      <nav aria-label="Journey" className={`fixed left-6 top-1/2 z-30 hidden -translate-y-1/2 transition-opacity duration-500 xl:block ${visit !== null ? "pointer-events-none opacity-0" : ""}`}>
         <ol className="relative flex flex-col gap-7 border-l border-paper/15 pl-4">
           {STOPS.map((s, i) => (
             <li key={s.name}>
@@ -403,7 +748,7 @@ export function Universe() {
       </nav>
 
       {/* telemetry */}
-      <div aria-hidden className="label pointer-events-none fixed right-6 top-20 z-30 hidden text-right leading-loose text-paper/45 md:block md:right-10">
+      <div aria-hidden className={`label pointer-events-none fixed right-6 top-20 z-30 hidden text-right leading-loose text-paper/45 transition-opacity duration-500 md:block md:right-10 ${visit !== null ? "opacity-0" : ""}`}>
         <div className="text-gold">
           {STOPS[hud.index].kind ? "Approaching" : "Event horizon"} · <span className="text-paper">{STOPS[hud.index].name}</span>
         </div>

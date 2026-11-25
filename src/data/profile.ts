@@ -16,7 +16,7 @@ export const stats = [
   { value: 8, suffix: "+", label: "Airline & GDS integrations" },
   { value: 6, suffix: "", label: "Products built end-to-end" },
   { value: 4, suffix: "", label: "Platforms — web, API, mobile, voice" },
-  { value: 2, suffix: "", label: "Languages shipped — EN / বাংলা" },
+  { value: 15, suffix: "", label: "Languages shipped — Kashleaf & Tikki" },
 ];
 
 // Route map — positions are in a 1000 × 520 SVG viewBox, hub at (500, 260)
@@ -115,7 +115,7 @@ export const projects: Project[] = [
     gate: "D7",
     description:
       "Plan it. Tick it. Repeat it. Offline-first routine tracker with on-time reminders, streaks and a GitHub-style activity graph.",
-    highlights: ["Offline-first", "Streaks & calendar", "Activity heatmap"],
+    highlights: ["Offline-first", "Streaks & calendar", "13 languages"],
     stack: ["Flutter", "Dart"],
     link: "https://github.com/jotonsd/tikki",
     live: "https://jotonsd.github.io/tikki-privacy/home.html",
@@ -142,7 +142,7 @@ export const projects: Project[] = [
     gate: "C8",
     description:
       "Personal & business accounting: income, expenses, loans and bills in one private place. Django API, Next.js web app and a Flutter mobile app.",
-    highlights: ["Income & expense tracking", "Loans & bills", "Web + mobile"],
+    highlights: ["Income, expenses, loans & bills", "Web + mobile", "15 languages incl. Arabic & Urdu (RTL)"],
     stack: ["Django", "Next.js", "TypeScript", "Flutter"],
     link: "https://github.com/jotonsd/hisab-frontend",
     live: "https://hisab.flyghuri.com",

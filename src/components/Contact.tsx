@@ -6,6 +6,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Github, Linkedin } from "./BrandIcons";
 import { fromDepth } from "./reveal";
 import { profile } from "@/data/profile";
+import { openVisit } from "./universe/visit";
 
 function Magnetic({ children, href }: { children: React.ReactNode; href: string }) {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -42,6 +43,13 @@ export function Contact() {
           <span className="text-gold">04</span>
           <span className="h-px w-10 bg-paper/30" />
           Arriving · <span className="text-paper">Sagittarius A*</span>
+          <button
+            type="button"
+            onClick={() => openVisit("Sagittarius A*")}
+            className="label ml-1 inline-flex items-center gap-1.5 rounded-full border border-gold/40 px-3 py-1 text-gold transition hover:border-gold hover:bg-gold/10"
+          >
+            Visit <ArrowUpRight className="size-3" />
+          </button>
         </motion.div>
         <motion.h2 {...fromDepth(0.15)} className="mt-8 font-display text-[clamp(1.8rem,4.4vw,3.8rem)] uppercase leading-[1.18] tracking-[-0.01em]">
           Let&apos;s build something <span className="text-gold-grad">beyond the horizon.</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ArrowUpRight, Lock } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { SectionHead } from "./SectionHead";
 import { fromDepth } from "./reveal";
 import { profile, projects } from "@/data/profile";
@@ -40,15 +40,6 @@ export function Projects() {
                           <span className="size-1.5 rounded-full bg-gold shadow-[0_0_8px_1px] shadow-gold/60" />
                           Live <ArrowUpRight className="size-3.5" />
                         </a>
-                      )}
-                      {p.link ? (
-                        <a href={p.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-paper/60 transition hover:text-gold">
-                          Code <ArrowUpRight className="size-3.5" />
-                        </a>
-                      ) : (
-                        <span className="flex items-center gap-1.5">
-                          <Lock className="size-3" /> Private code
-                        </span>
                       )}
                     </span>
                   </div>

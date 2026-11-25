@@ -45,7 +45,14 @@ body {
 }
 .glass:hover::before { opacity: 1; }
 
-.custom-cursor, .custom-cursor * { cursor: none !important; }
+
+/* planet visit mode: the universe takes the whole screen */
+main, body > header, [data-scrollbar] { transition: opacity 0.7s ease; }
+html[data-visiting] main,
+html[data-visiting] header,
+html[data-visiting] [data-scrollbar] { opacity: 0 !important; pointer-events: none; }
+html[data-visiting] body { cursor: grab; touch-action: none; }
+html[data-visiting][data-dragging] body { cursor: grabbing; }
 
 .label {
   font-family: var(--font-mono);

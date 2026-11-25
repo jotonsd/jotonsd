@@ -6,7 +6,7 @@ import { Work } from "@/components/Work";
 import { Projects } from "@/components/Projects";
 import { Stack } from "@/components/Stack";
 import { Contact } from "@/components/Contact";
-import { Cursor } from "@/components/Cursor";
+import { CardGlow } from "@/components/CardGlow";
 
 export default function Home() {
   return (
@@ -14,7 +14,7 @@ export default function Home() {
       <Universe />
       <ScrollPlane />
       <Nav />
-      <Cursor />
+      <CardGlow />
       <main>
         <Hero />
         <Work />

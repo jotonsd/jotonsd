@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { animate, motion, useInView } from "motion/react";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { profile, stats } from "@/data/profile";
+import { openVisit } from "./universe/visit";
 import { useIntroDone } from "./intro";
 
 function Counter({ to, suffix }: { to: number; suffix: string }) {
@@ -92,6 +93,9 @@ export function Hero() {
           <a href={profile.github} target="_blank" rel="noopener noreferrer" className="label inline-flex items-center gap-2 text-paper/70 transition hover:text-paper">
             GitHub <ArrowUpRight className="size-3.5" />
           </a>
+          <button type="button" onClick={() => openVisit("Earth")} className="label inline-flex items-center gap-2 text-gold transition hover:text-paper">
+            Visit Earth <ArrowUpRight className="size-3.5" />
+          </button>
         </motion.div>
 
         <motion.dl
