@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #050608;
+  --color-paper: #ecebe6;
+  --color-gold: #e9c67f;
+  --color-muted: #8f8d86;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: #000;
+  color: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+::selection { background: var(--color-gold); color: #000; }
+
+/* keeps text legible over bright planets */
+.legible { text-shadow: 0 2px 28px rgb(0 0 0 / 0.85), 0 0 2px rgb(0 0 0 / 0.6); }
+
+.glass {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.055), rgb(255 255 255 / 0.02));
+  border: 1px solid rgb(255 255 255 / 0.09);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* warm starlight gradient for accent words */
+.text-gold-grad {
+  background: linear-gradient(100deg, #f6dfae 0%, #e9c67f 45%, #c9954a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 18px rgb(0 0 0 / 0.7));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
