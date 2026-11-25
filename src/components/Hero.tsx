@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { animate, motion, useInView } from "motion/react";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { profile, stats } from "@/data/profile";
+import { useIntroDone } from "./intro";
 
 function Counter({ to, suffix }: { to: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -25,6 +26,7 @@ function Counter({ to, suffix }: { to: number; suffix: string }) {
 const ease = [0.22, 1, 0.36, 1] as const;
 
 function Letters({ text, className, delay }: { text: string; className?: string; delay: number }) {
+  const go = useIntroDone();
   return (
     <span className={`block ${className ?? ""}`} aria-label={text}>
       {text.split("").map((c, i) => (
@@ -33,7 +35,7 @@ function Letters({ text, className, delay }: { text: string; className?: string;
           aria-hidden
           className="inline-block"
           initial={{ opacity: 0, y: "0.35em", filter: "blur(12px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          animate={go && { opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 1.2, delay: delay + i * 0.045, ease }}
         >
           {c}
@@ -44,12 +46,13 @@ function Letters({ text, className, delay }: { text: string; className?: string;
 }
 
 export function Hero() {
+  const go = useIntroDone();
   return (
     <section id="top" className="relative flex min-h-screen items-center pb-24 pt-32">
       <div className="legible mx-auto w-full max-w-7xl px-6 md:px-10">
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={go && { opacity: 1 }}
           transition={{ duration: 1.2, delay: 0.2 }}
           className="label mb-10 flex items-center gap-4 text-paper/60"
         >
@@ -59,14 +62,14 @@ export function Hero() {
           <span className="text-paper/40">{profile.role}</span>
         </motion.div>
 
-        <h1 className="text-[clamp(3.6rem,10.5vw,9.5rem)] font-extralight leading-[0.9] tracking-[-0.045em]">
+        <h1 className="font-display text-[clamp(2.3rem,7.4vw,6.8rem)] uppercase leading-[1.02] tracking-[-0.02em]">
           <Letters text={profile.first.charAt(0) + profile.first.slice(1).toLowerCase()} delay={0.3} />
-          <Letters text={profile.last.charAt(0) + profile.last.slice(1).toLowerCase()} delay={0.55} className="font-light text-gold" />
+          <Letters text={profile.last.charAt(0) + profile.last.slice(1).toLowerCase()} delay={0.55} className="text-gold" />
         </h1>
 
         <motion.p
           initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={go && { opacity: 1, y: 0 }}
           transition={{ duration: 1.1, delay: 1.2, ease }}
           className="mt-10 max-w-xl text-lg leading-relaxed text-paper/75 md:text-xl"
         >
@@ -75,7 +78,7 @@ export function Hero() {
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={go && { opacity: 1, y: 0 }}
           transition={{ duration: 1.1, delay: 1.4, ease }}
           className="mt-10 flex flex-wrap items-center gap-8"
         >
@@ -93,14 +96,14 @@ export function Hero() {
 
         <motion.dl
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={go && { opacity: 1 }}
           transition={{ duration: 1.2, delay: 1.7 }}
           className="mt-24 grid max-w-4xl grid-cols-2 gap-y-8 border-t border-paper/15 pt-8 md:grid-cols-4"
         >
           {stats.map((s) => (
-            <div key={s.label} className="flex flex-col-reverse pr-6">
+            <div key={s.label} className="flex flex-col-reverse justify-end pr-6">
               <dt className="mt-2 font-mono text-[11px] leading-snug tracking-wider text-paper/50">{s.label}</dt>
-              <dd className="text-4xl font-light text-paper">
+              <dd className="font-display text-3xl text-paper">
                 <Counter to={s.value} suffix={s.suffix} />
               </dd>
             </div>
@@ -110,9 +113,9 @@ export function Hero() {
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={go && { opacity: 1 }}
         transition={{ delay: 2.4, duration: 1 }}
-        className="label absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-3 text-paper/40"
+        className="label absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-3 text-paper/40 [@media(max-height:960px)]:hidden"
       >
         Scroll to travel
         <span className="relative h-10 w-px overflow-hidden bg-paper/15">

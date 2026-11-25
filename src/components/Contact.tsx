@@ -43,7 +43,7 @@ export function Contact() {
           <span className="h-px w-10 bg-paper/30" />
           Arriving · <span className="text-paper">Sagittarius A*</span>
         </motion.div>
-        <motion.h2 {...fromDepth(0.15)} className="mt-8 text-[clamp(2.6rem,6.5vw,5.6rem)] font-light leading-[1.04] tracking-[-0.035em]">
+        <motion.h2 {...fromDepth(0.15)} className="mt-8 font-display text-[clamp(1.8rem,4.4vw,3.8rem)] uppercase leading-[1.18] tracking-[-0.01em]">
           Let&apos;s build something <span className="text-gold-grad">beyond the horizon.</span>
         </motion.h2>
         <motion.p {...fromDepth(0.3)} className="mx-auto mt-6 max-w-lg text-[17px] leading-relaxed text-paper/70">

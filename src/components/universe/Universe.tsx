@@ -67,6 +67,12 @@ function computeKeys(): Key[] {
 
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
+/** Tells the loading screen the first frame (all shaders compiled) has been drawn. */
+function markSceneReady() {
+  window.__sceneReady = true;
+  window.dispatchEvent(new Event("scene:ready"));
+}
+
 /* ------------------------------------------------------------------ */
 
 function makeStars(count: number) {
@@ -130,6 +136,7 @@ export function Universe() {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
     } catch {
       setFailed(true);
+      markSceneReady();
       return;
     }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -276,6 +283,14 @@ export function Universe() {
       return Math.min(1, Math.max(0, window.scrollY / max));
     };
 
+    // lift-off: start close to Earth, pull back onto the route when the intro ends
+    const startPos = new THREE.Vector3(5, -2, 17);
+    const startLook = STOPS[0].pos.clone();
+    let launchAt = window.__introDone ? 0 : Infinity;
+    const onIntro = () => (launchAt = time);
+    window.addEventListener("intro:done", onIntro);
+
+    let sceneReady = false;
     let ps = scrollFrac();
     let time = 0;
     let lastZ = 0;
@@ -301,6 +316,11 @@ export function Universe() {
       const z = THREE.MathUtils.lerp(k0.z, k1.z, e);
       camera.position.set(Math.sin(time * 0.07) * 0.6, Math.sin(time * 0.05) * 0.35, z);
       look.lerpVectors(k0.look, k1.look, e);
+      const lift = reduce ? 0 : 1 - smooth(Math.min(1, Math.max(0, (time - launchAt) / 3.2)));
+      if (lift > 0) {
+        camera.position.lerp(startPos, lift);
+        look.lerp(startLook, lift);
+      }
 
       const vz = (lastZ - z) / Math.max(dt, 1e-4);
       lastZ = z;
@@ -321,6 +341,10 @@ export function Universe() {
       renderer.render(scene, camera);
       renderer.setRenderTarget(null);
       renderer.render(post, postCam);
+      if (!sceneReady) {
+        sceneReady = true;
+        markSceneReady();
+      }
 
       hudT += dt;
       if (hudT > 0.25) {
@@ -341,6 +365,7 @@ export function Universe() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("intro:done", onIntro);
       ro.disconnect();
       scene.traverse((o) => {
         const m = o as THREE.Mesh;

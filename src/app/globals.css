@@ -10,6 +10,7 @@
 @theme inline {
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-michroma), var(--font-geist), sans-serif;
 }
 
 html { scroll-behavior: smooth; }
@@ -30,6 +31,21 @@ body {
   backdrop-filter: blur(18px) saturate(120%);
   -webkit-backdrop-filter: blur(18px) saturate(120%);
 }
+
+.glass { position: relative; }
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(233 198 127 / 0.1), transparent 45%);
+}
+.glass:hover::before { opacity: 1; }
+
+.custom-cursor, .custom-cursor * { cursor: none !important; }
 
 .label {
   font-family: var(--font-mono);

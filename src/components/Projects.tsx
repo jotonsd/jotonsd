@@ -49,7 +49,7 @@ export function Projects() {
                     )}
                   </div>
 
-                  <h3 className="mt-5 text-[2rem] font-light leading-tight tracking-tight">
+                  <h3 className="mt-5 font-display text-[1.45rem] uppercase leading-tight">
                     {p.name}
                   </h3>
                   <p className="mt-3 text-[15px] leading-relaxed text-paper/70">{p.description}</p>

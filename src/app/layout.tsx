@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Michroma } from "next/font/google";
 import { MotionProvider } from "@/components/MotionProvider";
+import { IntroProvider } from "@/components/intro";
 import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-geist" });
+const display = Michroma({ subsets: ["latin"], weight: "400", variable: "--font-michroma" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
@@ -14,9 +16,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
       <body className="font-sans">
-        <MotionProvider>{children}</MotionProvider>
+        <MotionProvider>
+          <IntroProvider>{children}</IntroProvider>
+        </MotionProvider>
       </body>
     </html>
   );

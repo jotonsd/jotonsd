@@ -35,7 +35,7 @@ export function SectionHead({ index, planet, kicker, title, accent, intro }: Pro
         initial="hidden"
         whileInView="shown"
         viewport={{ once: true, margin: "-80px" }}
-        className="text-[clamp(2.6rem,5.6vw,4.8rem)] font-light leading-[1.04] tracking-[-0.035em]"
+        className="font-display text-[clamp(1.6rem,3.3vw,2.8rem)] uppercase leading-[1.2] tracking-[-0.01em]"
       >
         {words.map((w, i) => (
           <span key={i} className="mr-[0.22em] inline-block overflow-hidden pb-[0.1em] align-bottom">
